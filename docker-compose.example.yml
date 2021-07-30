@@ -1,0 +1,31 @@
+version: '3.9'
+
+services:
+    postgres:
+        image: postgres
+        ports:
+            - '5432:5432'
+        environment:
+            POSTGRES_USER:
+            POSTGRES_PASSWORD:
+            POSTGRES_DB:
+        restart: unless-stopped
+        # apparently depends_on doesnt wait.
+        healthcheck:
+            test:
+              ['CMD', 'pg_isready', '-q', '-d', 'threads', '-U', 'threadbot']
+
+    bot:
+        build: .
+        depends_on:
+            - postgres
+        environment:
+            DATABASE_URL:
+            DISCORD_TOKEN:
+            # ALLOWED_USERS:
+            # FALSE or TRUE
+            # recommended: false for the first time, then true for the next
+            SKIP_COMMANDS: 'FALSE'
+            NODE_ENV: DEVELOPMENT
+            # PRODUCTION
+        restart: unless-stopped

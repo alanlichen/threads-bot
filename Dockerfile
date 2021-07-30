@@ -4,15 +4,11 @@ WORKDIR /app
 COPY package.json .
 COPY pnpm-lock.yaml .
 
-ENV NODE_ENV development
-# pnpm is currently broken in docker
+# pnpm work?
 RUN npm i
 
 COPY . .
 
-RUN npm run-script build
+RUN npm run build
 
-ENV NODE_ENV production
-RUN npm i
-
-CMD ["npm", "run-script", "start"]
+CMD ["npm", "run", "start"]

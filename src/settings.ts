@@ -1,55 +1,51 @@
 import fss from 'fs';
 import fs from 'fs/promises';
 import path from 'path';
-import { Database, open } from 'sqlite';
-import sqlite3 from 'sqlite3';
+import sql from './util/db.js';
+import logger from './util/logger.js';
 
 export interface ServerSettings {
-	enabledChannels: Record<string, string>;
+    enabledChannels: Record<string, string>;
 }
 
 const defaultSettings: ServerSettings = {
-	enabledChannels: {}
+    enabledChannels: {},
 };
 
-const settingsFolder = path.join(__dirname, '..', 'settings');
-const settingsFile = path.join(settingsFolder, 'settings.db');
-
-let database: Database;
-
 export async function settingsInitialize() {
-	// Nothing to initialize if the settings folder already exists
-	if (!fss.existsSync(settingsFolder)) {
-		await fs.mkdir(settingsFolder);
-	}
+    await sql.unsafe(`
+        create table if not exists settings
+        (
+            "serverid"     text not null primary key,
+            serversettings text
+        );
 
-	database = await open({
-		filename: settingsFile,
-		driver: sqlite3.Database
-	});
+        comment on column settings.serverid is 'The id of the server';
+        comment on column settings.serversettings is 'A stringified json object of the server settings';
+    `)
 
-	const query = `CREATE TABLE if NOT EXISTS settings (
-		serverId TEXT UNIQUE NOT NULL,
-		serverSettings TEXT
-	)`;
-	await database.run(query);
-
-	console.log('Database initialized');
+    logger.info('Database initialized');
 }
 
 export async function settingsGet(serverId: string): Promise<ServerSettings> {
-	const query = 'SELECT serverSettings FROM settings WHERE serverId = ?';
-	const params = [serverId];
-
-	const result = await database.get(query, params);
-	if (!result || !result.serverSettings) return defaultSettings;
-
-	return JSON.parse(result.serverSettings);
+    const [res] = await sql<{
+        serversettings?: string;
+    }[]>/*sql*/`SELECT serversettings
+                FROM settings
+                WHERE serverid = ${serverId}`;
+    logger.debug(res);
+    if (!res) return defaultSettings;
+    return JSON.parse(res.serversettings!);
 }
 
-export async function settingsSet(serverId: string, newSettings: ServerSettings): Promise<void> {
-	const query = 'INSERT OR REPLACE INTO settings (serverId, serverSettings) VALUES (?, ?)';
-	const params = [serverId, JSON.stringify(newSettings)];
-
-	await database.run(query, params);
+export async function settingsSet(
+    serverId: string,
+    newSettings: ServerSettings
+): Promise<void> {
+    await sql`
+        INSERT INTO settings (serverid, serversettings)
+        VALUES (${serverId}, ${JSON.stringify(newSettings)})
+        ON CONFLICT on constraint settings_pkey DO UPDATE
+            SET serversettings = EXCLUDED.serversettings
+    `;
 }

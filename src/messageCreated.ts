@@ -1,15 +1,23 @@
-import { Message } from 'discord.js';
-import { settingsGet } from './settings';
+import {Message} from 'discord.js';
+import {settingsGet} from './settings.js';
+import logger from './util/logger.js';
+import analyze from 'summary-bot';
+
+function makeLen(message: string) {
+    return message.length > 100 ? message.slice(0, 100) : message
+}
 
 export async function messageCreated(message: Message) {
-	if (!message.guild) return;
-	if (message.author.bot) return;
+    if (!message.guild || message.author.bot) return;
 
-	const serverSettings = await settingsGet(message.guild.id);
+    const serverSettings = await settingsGet(message.guild.id);
 
-	const threadMessage = serverSettings.enabledChannels[message.channel.id];
-	if (!threadMessage) return;
+    const channelAllowed = serverSettings.enabledChannels[message.channel.id];
+    if (!channelAllowed) return;
 
-	console.log('Creating thread for message');
-	message.startThread(threadMessage, 60).catch(console.error);
+    logger.debug('Creating thread for message');
+    message.startThread(
+        makeLen(analyze(message.content, 1).text || channelAllowed),
+        60
+    ).catch(logger.error);
 }

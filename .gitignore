@@ -3,3 +3,5 @@ dist/
 settings/
 *.log
 .env
+docker-compose.yml
+.idea/

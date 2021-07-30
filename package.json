@@ -2,22 +2,28 @@
 	"name": "threads-bot",
 	"version": "1.0.0",
 	"description": "A bot that automatically creates threads",
-	"main": "index.js",
+	"main": "dist/index.js",
+	"type": "module",
 	"scripts": {
 		"dev": "pnpm run build && pnpm run start",
-		"start": "cd dist && node --trace-warnings index.js",
-		"build": "tsc"
+		"start": "node --trace-warnings .",
+		"//": "node --trace-warnings .",
+		"build": "rimraf dist && tsc",
+		"//2": "rimraf dist && "
 	},
 	"author": "xethlyx",
 	"license": "ISC",
 	"dependencies": {
-		"discord.js": "13.0.0-dev.4f1f32f.1627517033",
-		"sqlite": "^4.0.23",
-		"sqlite3": "^5.0.2"
+		"discord.js": "^13.0.0-dev.2675b08.1627603447",
+		"dotenv": "^10.0.0",
+		"node-fetch": "^2.6.1",
+		"postgres": "^2.0.0-beta.6",
+		"summary-bot": "^1.0.1",
+		"winston": "^3.3.3"
 	},
 	"devDependencies": {
 		"@types/node": "^16.4.6",
-		"@types/sqlite3": "^3.1.7",
+		"rimraf": "^3.0.2",
 		"typescript": "^4.3.5"
 	}
 }
