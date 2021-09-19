@@ -8,7 +8,7 @@ config();
 
 async function main() {
 	const client = new Client({
-		intents: [Intents.FLAGS.GUILD_MESSAGES],
+		intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES],
 	});
 
 	await settingsInitialize();
